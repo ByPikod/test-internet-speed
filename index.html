@@ -1,0 +1,158 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Internet Speed</title>
+    <style>
+        
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        #results {
+            width: 100%;
+            height: 90vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #result-box {
+            box-shadow: 0px 0px 10px 3px rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+            padding: 20px;
+            height: min-content;
+        }
+
+        td {
+            padding: 5px;
+        }
+
+        .result {
+            color: white;
+            background-color: black;
+            padding: 5px;
+            border-radius: 4px;
+        }
+        
+        .title {
+            width: 200px;
+        }
+
+        #measure-button {
+            width: 100%;
+            margin-top: 20px;
+            padding: 10px;
+            background: none;
+            border: solid 1px black;
+            border-radius: 4px;
+            outline: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        #measure-button:hover {
+            background: black;
+            color: white;
+        }
+
+    </style>
+<script>
+    async function measure_ping() {
+        let startTime = performance.now();
+        let response = await fetch('https://www.google.com', {
+            method: 'GET',
+            mode: 'no-cors'
+        });
+        let endTime = performance.now();
+        let timeElapsed = endTime - startTime;
+        return timeElapsed;
+    }
+
+    async function download_mbps() {
+        let url = 'https://upload.wikimedia.org/wikipedia/commons/f/ff/Pizigani_1367_Chart_10MB.jpg';
+        url += '?cache_bust=' + Date.now();
+        let startTime = performance.now();
+        let response = await fetch(url);
+        let blob = await response.blob();
+        let endTime = performance.now();
+        let size = blob.size;
+        console.log("download: " + size + " Elapsed: " + (endTime - startTime));
+        return size / (endTime - startTime) / 125;
+    }
+
+    async function upload_mbps() {
+        let size = 5000000 // 5MB
+        let uploadBody = "0".repeat(size);  
+        let blob = new Blob([uploadBody], {type : 'text/plain'});
+
+        let formData = new FormData();
+        formData.append('file', blob, 'large_file2.txt');
+
+        let startTime = performance.now();
+
+        let response = await fetch('http://www.tipjar.com/cgi-bin/test', {
+            method: 'POST',
+            body: formData,
+            mode: 'no-cors'
+        });
+
+        let endTime = performance.now();
+        let timeElapsed = endTime - startTime;
+
+        console.log("upload  : " + size + " Elapsed: " + timeElapsed);
+
+        return size / timeElapsed / 125;
+    }
+
+    async function measure() {
+        let testTitle = document.getElementById("test-title");
+        let pingResult = document.getElementById("ping-result");
+        let downloadResult = document.getElementById("download-result");
+        let uploadResult = document.getElementById("upload-result");
+
+        pingResult.textContent = "0 ms";
+        downloadResult.textContent = "0.00 mbps";
+        uploadResult.textContent = "0.00 mbps";
+
+        testTitle.textContent = "Testing ping...";
+        let ping = await measure_ping();
+        pingResult.textContent = ping.toFixed(0) + " ms";
+
+        testTitle.textContent = "Testing download speed...";
+        let downloadSpeed = await download_mbps()
+        downloadResult.textContent = downloadSpeed.toFixed(2) + " mbps";
+
+        testTitle.textContent = "Testing upload speed...";
+        let uploadSpeed = await upload_mbps()
+        uploadResult.textContent = uploadSpeed.toFixed(2) + " mbps";
+
+        testTitle.textContent = "Test connection speed";
+    }
+</script>
+</head>
+<body>
+    <div id="results">
+        <div id="result-box">
+            <h3 id="test-title">Test connection speed</h3>
+                
+            <table>
+                <tr>
+                    <td class="title">Ping:</td>
+                    <td id="ping-result" class="result">0 ms</td>
+                </tr>
+                <tr>
+                    <td class="title">Download:</td>
+                    <td id="download-result" class="result">0.00 mbps</td>
+                </tr>
+                <tr>
+                    <td class="title">Upload:</td>
+                    <td id="upload-result" class="result">0.00 mbps</td>
+                </tr>
+            </table>
+            <button id="measure-button" onclick="measure()">Measure</button>
+        </div>
+    </div>
+</body>
+</html>
